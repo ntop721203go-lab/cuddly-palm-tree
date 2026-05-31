@@ -29,12 +29,14 @@ def _real_reply(message: str, history: list[dict]) -> str:
             messages=messages,
         )
         return response.content[0].text
+    except anthropic.AuthenticationError:
+        return "⚠️ API 키가 유효하지 않습니다. 설정을 확인해주세요."
     except anthropic.BadRequestError as e:
         if "credit balance" in str(e).lower():
             return "⚠️ API 크레딧이 부족합니다. console.anthropic.com에서 충전 후 다시 시도해주세요."
-        raise
-    except anthropic.AuthenticationError:
-        return "⚠️ API 키가 유효하지 않습니다. 설정을 확인해주세요."
+        return f"⚠️ 요청 오류: {e}"
+    except Exception as e:
+        return f"⚠️ 일시적 오류가 발생했습니다. 잠시 후 다시 시도해주세요. ({type(e).__name__})"
 
 
 def _get_user_id(token: str) -> str | None:
