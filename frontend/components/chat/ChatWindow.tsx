@@ -2,6 +2,7 @@
 import { useEffect, useRef } from "react";
 import { useChatStore } from "@/store";
 import { logout } from "@/lib/actions/auth";
+import { createClient } from "@/lib/supabase/client";
 import ChatMessage from "./ChatMessage";
 import ChatInput from "./ChatInput";
 
@@ -10,8 +11,31 @@ interface Props {
 }
 
 export default function ChatWindow({ user }: Props) {
-  const { messages, isLoading, addMessage, setLoading, clearMessages } = useChatStore();
+  const { messages, isLoading, addMessage, initMessages, setLoading, clearMessages } = useChatStore();
   const bottomRef = useRef<HTMLDivElement>(null);
+
+  // 로그인 시 채팅 기록 로드
+  useEffect(() => {
+    const load = async () => {
+      const supabase = createClient();
+      const { data } = await supabase
+        .from("messages")
+        .select("id, role, content, created_at")
+        .order("created_at", { ascending: true })
+        .limit(100);
+      if (data?.length) {
+        initMessages(
+          data.map((m) => ({
+            id: m.id,
+            role: m.role as "user" | "assistant",
+            content: m.content,
+            createdAt: new Date(m.created_at),
+          }))
+        );
+      }
+    };
+    load();
+  }, [initMessages]);
 
   useEffect(() => {
     bottomRef.current?.scrollIntoView({ behavior: "smooth" });
@@ -22,10 +46,17 @@ export default function ChatWindow({ user }: Props) {
     setLoading(true);
 
     try {
+      const supabase = createClient();
+      const { data: { session } } = await supabase.auth.getSession();
+      const token = session?.access_token ?? "";
+
       const history = messages.map(({ role, content }) => ({ role, content }));
       const res = await fetch("/api/py/chat/", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: {
+          "Content-Type": "application/json",
+          ...(token && { Authorization: `Bearer ${token}` }),
+        },
         body: JSON.stringify({ message: content, history }),
       });
       if (!res.ok) throw new Error(`HTTP ${res.status}`);
