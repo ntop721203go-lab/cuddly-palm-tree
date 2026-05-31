@@ -1,6 +1,5 @@
 "use client";
 import { useActionState } from "react";
-import Link from "next/link";
 import { login } from "@/lib/actions/auth";
 
 export default function LoginPage() {
@@ -58,13 +57,6 @@ export default function LoginPage() {
             {pending ? "로그인 중..." : "로그인"}
           </button>
         </form>
-
-        <p className="text-center text-sm text-gray-500 mt-6">
-          계정이 없으신가요?{" "}
-          <Link href="/signup" className="text-blue-500 hover:underline font-medium">
-            회원가입
-          </Link>
-        </p>
       </div>
     </div>
   );
