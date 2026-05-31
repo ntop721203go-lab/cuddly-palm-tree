@@ -1,10 +1,10 @@
 "use client";
 import { useActionState } from "react";
 import Link from "next/link";
-import { login } from "@/lib/actions/auth";
+import { signup } from "@/lib/actions/auth";
 
-export default function LoginPage() {
-  const [state, action, pending] = useActionState(login, null);
+export default function RegisterPage() {
+  const [state, action, pending] = useActionState(signup, null);
 
   return (
     <div className="w-full max-w-sm">
@@ -12,7 +12,7 @@ export default function LoginPage() {
         <div className="text-center mb-8">
           <span className="text-4xl">🤖</span>
           <h1 className="text-2xl font-bold text-gray-900 mt-2">AI 비서</h1>
-          <p className="text-sm text-gray-500 mt-1">로그인하여 시작하세요</p>
+          <p className="text-sm text-gray-500 mt-1">새 계정을 만드세요</p>
         </div>
 
         <form action={action} className="space-y-4">
@@ -44,9 +44,10 @@ export default function LoginPage() {
               name="password"
               type="password"
               required
-              autoComplete="current-password"
+              autoComplete="new-password"
+              minLength={6}
               className="w-full rounded-xl border border-gray-300 px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-400"
-              placeholder="••••••••"
+              placeholder="최소 6자리"
             />
           </div>
 
@@ -55,14 +56,14 @@ export default function LoginPage() {
             disabled={pending}
             className="w-full bg-blue-500 hover:bg-blue-600 disabled:bg-blue-300 text-white rounded-xl py-2.5 text-sm font-medium transition-colors"
           >
-            {pending ? "로그인 중..." : "로그인"}
+            {pending ? "가입 중..." : "회원가입"}
           </button>
         </form>
 
         <p className="text-center text-sm text-gray-500 mt-6">
-          계정이 없으신가요?{" "}
-          <Link href="/register" className="text-blue-500 hover:underline font-medium">
-            회원가입
+          이미 계정이 있으신가요?{" "}
+          <Link href="/login" className="text-blue-500 hover:underline font-medium">
+            로그인
           </Link>
         </p>
       </div>
