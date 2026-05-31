@@ -1,10 +1,15 @@
 "use client";
 import { useEffect, useRef } from "react";
 import { useChatStore } from "@/store";
+import { logout } from "@/lib/actions/auth";
 import ChatMessage from "./ChatMessage";
 import ChatInput from "./ChatInput";
 
-export default function ChatWindow() {
+interface Props {
+  user: { email: string };
+}
+
+export default function ChatWindow({ user }: Props) {
   const { messages, isLoading, addMessage, setLoading, clearMessages } = useChatStore();
   const bottomRef = useRef<HTMLDivElement>(null);
 
@@ -40,20 +45,29 @@ export default function ChatWindow() {
 
   return (
     <div className="flex flex-col h-screen bg-gray-50">
-      {/* 헤더 */}
       <header className="bg-white border-b border-gray-200 px-6 py-4 flex items-center justify-between">
         <h1 className="text-lg font-semibold text-gray-900">AI 비서</h1>
-        {messages.length > 0 && (
-          <button
-            onClick={clearMessages}
-            className="text-xs text-gray-400 hover:text-gray-600 transition-colors"
-          >
-            대화 초기화
-          </button>
-        )}
+        <div className="flex items-center gap-3">
+          {messages.length > 0 && (
+            <button
+              onClick={clearMessages}
+              className="text-xs text-gray-400 hover:text-gray-600 transition-colors"
+            >
+              대화 초기화
+            </button>
+          )}
+          <span className="text-xs text-gray-400 hidden sm:block">{user.email}</span>
+          <form action={logout}>
+            <button
+              type="submit"
+              className="text-xs text-gray-500 hover:text-red-500 border border-gray-200 hover:border-red-200 rounded-lg px-3 py-1.5 transition-colors"
+            >
+              로그아웃
+            </button>
+          </form>
+        </div>
       </header>
 
-      {/* 메시지 목록 */}
       <div className="flex-1 overflow-y-auto px-6 py-4 space-y-3">
         {messages.length === 0 && (
           <div className="flex flex-col items-center justify-center h-full text-gray-400 gap-2">
@@ -66,7 +80,6 @@ export default function ChatWindow() {
           <ChatMessage key={msg.id} message={msg} />
         ))}
 
-        {/* 로딩 점 애니메이션 */}
         {isLoading && (
           <div className="flex justify-start">
             <div className="bg-white rounded-2xl px-4 py-3 shadow-sm border border-gray-100">
