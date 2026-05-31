@@ -52,7 +52,7 @@ def _save_messages(user_id: str, user_msg: str, assistant_msg: str) -> None:
         print(f"[DB] 메시지 저장 실패: {e}")
 
 
-@router.post("/", response_model=ChatResponse)
+@router.post("", response_model=ChatResponse)
 async def chat(req: ChatRequest, authorization: str = Header(default="")):
     use_mock = not os.getenv("ANTHROPIC_API_KEY") or os.getenv("USE_MOCK") == "true"
     reply = _mock_reply(req.message) if use_mock else _real_reply(req.message, req.history)
