@@ -18,6 +18,23 @@ def _mock_reply(message: str) -> str:
     return f"[Mock] 메시지 수신: '{message}' — API 키 설정 후 실제 응답이 반환됩니다."
 
 
+def _lm_studio_reply(message: str, history: list[dict]) -> str:
+    from openai import OpenAI
+    base_url = os.getenv("LM_STUDIO_URL", "http://localhost:1234/v1")
+    model = os.getenv("LM_STUDIO_MODEL", "local-model")
+    client = OpenAI(base_url=base_url, api_key="lm-studio")
+    messages = history + [{"role": "user", "content": message}]
+    try:
+        response = client.chat.completions.create(
+            model=model,
+            messages=messages,
+            max_tokens=1024,
+        )
+        return response.choices[0].message.content or ""
+    except Exception as e:
+        return f"⚠️ LM Studio 연결 실패: LM Studio가 실행 중인지 확인해주세요. ({type(e).__name__})"
+
+
 def _real_reply(message: str, history: list[dict]) -> str:
     import anthropic
     client = anthropic.Anthropic(api_key=os.getenv("ANTHROPIC_API_KEY"))
@@ -63,8 +80,15 @@ def _save_messages(user_id: str, user_msg: str, assistant_msg: str) -> None:
 
 @router.post("", response_model=ChatResponse)
 async def chat(req: ChatRequest, authorization: str = Header(default="")):
-    use_mock = not os.getenv("ANTHROPIC_API_KEY") or os.getenv("USE_MOCK") == "true"
-    reply = _mock_reply(req.message) if use_mock else _real_reply(req.message, req.history)
+    use_lm_studio = os.getenv("USE_LM_STUDIO") == "true"
+    use_mock = not use_lm_studio and (not os.getenv("ANTHROPIC_API_KEY") or os.getenv("USE_MOCK") == "true")
+
+    if use_lm_studio:
+        reply = _lm_studio_reply(req.message, req.history)
+    elif use_mock:
+        reply = _mock_reply(req.message)
+    else:
+        reply = _real_reply(req.message, req.history)
 
     user_id = _get_user_id(authorization)
     if user_id:
